@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Estatio MEP Operations
 
-## Getting Started
+Frontend prototype for Estatio's project operations workflow. It uses Next.js, TypeScript, Tailwind CSS, and shadcn/ui components.
 
-First, run the development server:
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Prototype behavior
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Switch between Superadmin, Project Manager, Engineer, and Supervisor from the profile selector.
+- Browse demo projects, progress, schedule health, teams, and site notes.
+- PM and Superadmin views include sample cost and forecast information; Engineer and Supervisor views do not.
+- Engineers can assign daily work, targets, teams, instructions, and optional photo/audio references to a Supervisor.
+- Supervisors see their assignments and record the completed quantity with optional photos, audio, and a site note.
+- PM and Superadmin can review the submitted evidence and accept or return each completion report.
+- Creating projects and changing report statuses update local prototype state only.
 
-## Learn More
+All names, projects, quantities, and finances are illustrative demo data. Role visibility in this prototype is a UI demonstration only. Production access control must be enforced in Supabase with database policies.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [FRONTEND_PLAN.md](./FRONTEND_PLAN.md) for the planned build phases and current scope.
