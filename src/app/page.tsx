@@ -1,5 +1,5 @@
-import { EstatioApp } from "@/components/estatio-app";
+import { WorkflowApp } from "@/components/workflow-app";
 
 export default function Home() {
-  return <EstatioApp />;
+  return <WorkflowApp />;
 }

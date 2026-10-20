@@ -12,8 +12,10 @@ type DatePickerProps = {
   onValueChange: (value: string) => void
   placeholder?: string
   className?: string
+  ariaLabel?: string
   invalid?: boolean
   minDate?: string
+  disabled?: boolean
 }
 
 function parseDate(value: string) {
@@ -26,7 +28,7 @@ function toDateValue(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
 }
 
-function DatePicker({ value, onValueChange, placeholder = "Pick a date", className, invalid, minDate }: DatePickerProps) {
+function DatePicker({ value, onValueChange, placeholder = "Pick a date", className, ariaLabel, invalid, minDate, disabled }: DatePickerProps) {
   const [open, setOpen] = useState(false)
   const selected = parseDate(value)
   const minimum = parseDate(minDate ?? "")
@@ -41,8 +43,9 @@ function DatePicker({ value, onValueChange, placeholder = "Pick a date", classNa
           <Button
             type="button"
             variant="outline"
-            aria-label={selected ? `Selected date: ${label}` : placeholder}
+            aria-label={ariaLabel ? `${ariaLabel}: ${label}` : selected ? `Selected date: ${label}` : placeholder}
             aria-invalid={invalid}
+            disabled={disabled}
             className={cn(
               "h-9 w-full justify-start gap-2 border-input bg-card px-3 text-left text-xs font-normal text-foreground hover:bg-muted",
               !selected && "text-muted-foreground",

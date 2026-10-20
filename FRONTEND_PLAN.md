@@ -1,38 +1,40 @@
-# Estatio frontend plan
+# Estatio workflow prototype
 
 ## Product direction
 
-Build the first Estatio MEP Operations frontend in Next.js and TypeScript, using shadcn/ui components and realistic demo data. Keep the interface role-aware and responsive. Connect Supabase after the main workflows and permissions are reviewed.
+Build an Estatio MEP workflow prototype in Next.js and TypeScript. Keep role-specific screens and approval paths visible in a local demo before connecting a backend.
 
-## Current first slice
+## Current scope
 
-- Shared responsive workspace shell with role switcher and role-based navigation.
-- Portfolio overview with project counts, measured progress, weekly planned-versus-completed output, attention items, and project health.
-- Searchable and filterable project table, project detail dialog, and sample cost outlook visible to Superadmin and PM.
-- Engineer flow to assign daily work, target quantities, a Supervisor and team, site instructions, and reference photos/audio.
-- Supervisor flow to view assigned work and record completed quantities, site notes, photos, and audio against each assignment.
-- PM/Superadmin review queue with completion evidence and accept/return actions linked to the assignment and daily report.
-- People and teams view for Superadmin/PM.
-- Demo-only project creation and local status changes.
+- Super Admin project creation with client details, budget allocation, and assigned PM.
+- Project workspaces that contain that project's BOQ, work packages, cost ledger, and Finalization & Handover checklist; these aren't global sections.
+- BOQ cost estimates: High Side quantity × unit rate, and a work estimate for each Low Side package.
+- Portfolio cost summary for PM and Super Admin plus a per-project cost ledger with budget health, approved spend, pending bills, BOQ estimates, and daily site output.
+- Engineer and PM BOQ preparation, with PM release of High Side to Purchase.
+- Purchase Team grouped orders with item selection, order and delivery dates, one bill and invoice total per group, and Super Admin approval.
+- Individual work package pages with dated Supervisor updates, photo/audio attachments, package chat, and clearance requests.
+- Engineer review of daily updates and Supervisor local purchase bills.
+- PM closeout checklist and Super Admin handover approval.
+- Demo role switcher including Purchase Team.
 
-## Build phases
+## Next phases
 
-1. **Frontend foundation — complete:** Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, Estatio shell, typed demo data, and responsive role-based screens.
-2. **Operations workflows — in progress:** Engineer assignments flow to the selected Supervisor and team; Supervisors record quantity and media evidence; PM actions update linked report and assignment statuses. Continue refining project health, delay, material, and quality interactions.
-3. **Backend connection:** Design the schema and role permissions, connect authentication and data through Supabase, and enforce access with database policies.
-4. **Production readiness:** Add validation, error and loading states, audit history, reporting, and deployment configuration after the workflows are agreed.
+1. Review the prototype workflow and confirm edge cases and role permissions.
+2. Design database tables, authentication, file storage, and approval audit history.
+3. Connect the approved workflow to the backend and enforce permissions server-side.
+4. Add production validation, loading/error states, reporting, and deployment configuration.
 
-## Current role assumptions
+## Role and approval assumptions
 
-- Superadmin can see the full portfolio and financial information.
-- PM sees assigned projects, financial information, and the completion review queue.
-- Engineer creates daily work assignments with targets, team, instructions, and optional reference media.
-- Supervisor sees only assignments addressed to them and records completed quantities with optional photos, audio, and notes for PM review.
-- Engineer and Supervisor can attach photos and audio to work records; PM review displays submitted completion evidence.
-- Financial information is hidden from Engineer and Supervisor in the prototype.
+- Super Admin creates projects and approves Purchase Team grouped-order bills and final handover.
+- PM and Engineer prepare BOQ lines; PM approves the BOQ before material purchasing begins.
+- Purchase Team groups multiple High Side items into one order and submits one bill for Super Admin approval.
+- Supervisors post daily updates and local purchase bills for their assigned work packages.
+- Engineers verify daily progress and approve or return Supervisor local purchase bills.
+- Clearance requests are recorded in each work package discussion.
 
-These are demonstration rules only. Confirm the final permission matrix before connecting real users and data. Supabase Row Level Security must enforce production access; hiding interface elements is not sufficient.
+These are prototype behaviors only. Confirm the complete permission matrix and use server-enforced access control before connecting real users and project records.
 
 ## Demo data note
 
-Every name, client, project, quantity, date, and financial figure is illustrative. Prototype actions change local page state only and are not saved to a server.
+The SHOBHA BOQ row descriptions are based on the supplied Estatio BOQ. Seeded project quantities, rates, budgets, invoices, and progress are illustrative demo figures, clearly labeled in the UI and not client-approved. Newly created projects do not inherit the demo financial records. Prototype actions change local page state only and are not saved to a server.
