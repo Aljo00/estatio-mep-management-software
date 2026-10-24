@@ -521,9 +521,10 @@ function todayInIndiaISO() {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-function lowSideStatus(line: BoqLine) {
+function lowSideStatus(line: BoqLine, today: string) {
   if (line.status === "Clearance required" || line.status === "Complete") return line.status;
-  return line.startDate && line.startDate <= todayInIndiaISO() ? "In progress" : "Not started";
+  if (!today) return line.status;
+  return line.startDate && line.startDate <= today ? "In progress" : "Not started";
 }
 
 function money(amount: number) {
@@ -618,6 +619,7 @@ export function WorkflowApp() {
   const [role, setRole] = useState<Role>("pm");
   const [page, setPage] = useState<Page>("overview");
   const [todayLabel, setTodayLabel] = useState("Today");
+  const [todayISO, setTodayISO] = useState("");
   const [projects, setProjects] = useState(seedProjects);
   const [boqLines, setBoqLines] = useState(seedBoq);
   const [packages, setPackages] = useState(seedPackages);
@@ -715,6 +717,7 @@ export function WorkflowApp() {
   useEffect(() => {
     const syncScheduledWork = () => {
       const today = todayInIndiaISO();
+      setTodayISO(today);
       setBoqLines((current) => {
         let changed = false;
         const next = current.map((line) => {
@@ -1524,7 +1527,7 @@ export function WorkflowApp() {
                     <td className="w-28 px-2 py-2"><BoqText ariaLabel={`${line.item || "Work"} duration in days`} type="number" value={line.duration} disabled={!editable || line.status === "Clearance required"} placeholder={line.status === "Clearance required" ? "After clearance" : "days"} onChange={(value) => updateLine(line.id, "duration", value)} /></td>
                     <td className="w-40 px-2 py-2"><DatePicker ariaLabel={`${line.item || "Work"} planned start date`} value={line.startDate} disabled={!editable || line.status === "Clearance required"} onValueChange={(value) => updateLine(line.id, "startDate", value)} className="min-w-[132px]" /></td>
                     <td className="w-40 px-2 py-2"><DatePicker ariaLabel={`${line.item || "Work"} planned end date`} value={line.endDate} disabled={!editable || line.status === "Clearance required"} onValueChange={(value) => updateLine(line.id, "endDate", value)} className="min-w-[132px]" /></td>
-                    <td className="min-w-48 px-2 py-2"><div className="flex flex-wrap items-center gap-2"><Status value={lowSideStatus(line)} />{["superadmin", "pm", "engineer"].includes(role) && line.status === "In progress" && dailyReports.some((report) => report.status === "Verified" && packages.some((workPackage) => workPackage.lineId === line.id && workPackage.id === report.packageId)) && <Button type="button" size="xs" variant="outline" onClick={() => updateLine(line.id, "status", "Complete")}>Mark complete</Button>}</div></td>
+                    <td className="min-w-48 px-2 py-2"><div className="flex flex-wrap items-center gap-2"><Status value={lowSideStatus(line, todayISO)} />{["superadmin", "pm", "engineer"].includes(role) && line.status === "In progress" && dailyReports.some((report) => report.status === "Verified" && packages.some((workPackage) => workPackage.lineId === line.id && workPackage.id === report.packageId)) && <Button type="button" size="xs" variant="outline" onClick={() => updateLine(line.id, "status", "Complete")}>Mark complete</Button>}</div></td>
                     <td className="w-40 px-2 py-2"><BoqText ariaLabel={`${line.item || "Work"} estimated cost in rupees`} type="number" value={line.workEstimate} disabled={!editable} placeholder="Work cost" onChange={(value) => updateLine(line.id, "workEstimate", value)} /></td>
                   </> : <>
                     <td className="w-28 px-2 py-2"><BoqText ariaLabel={`${line.item || "Closeout item"} duration in days`} type="number" value={line.duration} disabled={!editable} placeholder="days" onChange={(value) => updateLine(line.id, "duration", value)} /></td>
@@ -1654,7 +1657,7 @@ export function WorkflowApp() {
                 {materialDraftSource === "BOQ" ? <Field label="Select BOQ material"><WorkflowSelect value={line.boqLineId ?? "choose-material"} onValueChange={(value) => value === "choose-material" ? updateMaterialDraftLine(line.key, { boqLineId: undefined, material: "", unit: "", quantity: "", wantedDate: "", reason: "" }) : selectBoqMaterial(line.key, value)} ariaLabel={`BOQ material ${index + 1}`} options={[{ value: "choose-material", label: "Choose a High Side item" }, ...projectLines.filter((boqLine) => boqLine.section === "High Side").map((boqLine) => ({ value: boqLine.id, label: `${boqLine.item} · ${boqLine.quantity} ${boqLine.unit}` }))]} /></Field> : <Field label="Material / specification"><TextInput value={line.material} onChange={(event) => updateMaterialDraftLine(line.key, { material: event.target.value })} placeholder="e.g. Copper pipe fittings" aria-label={`Additional material ${index + 1}`} /></Field>}
                 {materialDraftSource === "BOQ" ? <Field label="Unit"><TextInput value={line.unit} readOnly placeholder="Set from BOQ" aria-label={`Unit for material ${index + 1}`} /></Field> : <Field label="Unit"><WorkflowSelect value={line.unit || "pcs"} onValueChange={(value) => updateMaterialDraftLine(line.key, { unit: value })} ariaLabel={`Unit for material ${index + 1}`} options={[...units, "cylinders", "tubes"].map((unit) => ({ value: unit, label: unit }))} /></Field>}
                 <Field label="Requested quantity"><TextInput type="number" min="0.01" step="any" value={line.quantity} onChange={(event) => updateMaterialDraftLine(line.key, { quantity: event.target.value })} placeholder="0" aria-label={`Quantity for material ${index + 1}`} /></Field>
-                <Field label="Needed on site by"><DatePicker value={line.wantedDate} minDate={todayInIndiaISO()} onValueChange={(value) => updateMaterialDraftLine(line.key, { wantedDate: value })} ariaLabel={`Wanted date for material ${index + 1}`} /></Field>
+                <Field label="Needed on site by"><DatePicker value={line.wantedDate} minDate={todayISO} onValueChange={(value) => updateMaterialDraftLine(line.key, { wantedDate: value })} ariaLabel={`Wanted date for material ${index + 1}`} /></Field>
                 <div className="sm:col-span-2"><Field label="Why is this material needed?"><Textarea value={line.reason} onChange={(event) => updateMaterialDraftLine(line.key, { reason: event.target.value })} rows={2} placeholder={materialDraftSource === "BOQ" ? "What site need should this material support?" : "Why is this extra material needed outside the BOQ?"} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-teal-700" /></Field></div>
               </div>
             </div>)}
@@ -1752,7 +1755,7 @@ export function WorkflowApp() {
       line: linesById.get(item.lineId),
       latest: dailyReports.filter((report) => report.packageId === item.id).sort((a, b) => b.date.localeCompare(a.date))[0],
     }));
-    const inProgress = projectPackages.filter(({ line }) => line && lowSideStatus(line) === "In progress");
+    const inProgress = projectPackages.filter(({ line }) => line && lowSideStatus(line, todayISO) === "In progress");
     return <>
       {project.isDemo && <div className="mb-4 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs text-sky-900">Illustrative demo project data.</div>}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -1789,7 +1792,7 @@ export function WorkflowApp() {
     return <ProjectReports
       project={project}
       preparedBy={personName}
-      today={todayInIndiaISO()}
+      today={todayISO}
       boqLines={projectLines}
       materialRequests={materialRequests.filter((request) => request.projectId === project.id)}
       dailyReports={dailyReports.filter((report) => report.projectId === project.id)}
