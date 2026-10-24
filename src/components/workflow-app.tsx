@@ -171,6 +171,24 @@ type ChatMessage = {
   kind: "Message" | "Clearance request";
   resolved: boolean;
 };
+type WorkPackageRequestMessage = { id: string; author: string; role: Role; message: string; sentAt: string };
+type WorkPackageRequest = {
+  id: string;
+  projectId: string;
+  packageId: string;
+  title: string;
+  details: string;
+  kind: "Material" | "Clearance" | "Other";
+  requestedBy: string;
+  createdAt: number;
+  dueDate: string;
+  currentOwner: string;
+  currentOwnerRole: "engineer" | "pm" | "superadmin";
+  ownerSince: number;
+  status: "Open" | "Resolved";
+  history: { owner: string; role: "engineer" | "pm" | "superadmin"; at: number }[];
+  messages: WorkPackageRequestMessage[];
+};
 type LocalPurchase = {
   id: string;
   projectId: string;
@@ -398,6 +416,140 @@ const seedPackages: WorkPackage[] = seedBoq
     supervisor: roleNames.supervisor,
     engineer: roleNames.engineer,
   }));
+
+const seedWorkPackageRequests: WorkPackageRequest[] = [
+  {
+    id: "REQ-SHB-021",
+    projectId: mainProjectId,
+    packageId: "WP-L03",
+    title: "Copper pipe fittings for Level 2",
+    details: "Please confirm stock and arrange the required elbows and branch fittings before the refrigerant piping crew starts the next run.",
+    kind: "Material",
+    requestedBy: roleNames.supervisor,
+    createdAt: Date.parse("2026-10-23T04:00:00+05:30"),
+    dueDate: "2026-10-28",
+    currentOwner: roleNames.engineer,
+    currentOwnerRole: "engineer",
+    ownerSince: Date.parse("2026-10-23T04:00:00+05:30"),
+    status: "Open",
+    history: [{ owner: roleNames.engineer, role: "engineer", at: Date.parse("2026-10-23T04:00:00+05:30") }],
+    messages: [
+      { id: "RMSG-SHB-021-1", author: roleNames.supervisor, role: "supervisor", message: "The current stock will cover only one more branch. Please let me know when the fittings can reach site.", sentAt: "23 Oct 2026, 9:30 am" },
+      { id: "RMSG-SHB-021-2", author: roleNames.engineer, role: "engineer", message: "Checking the store balance now. I will confirm the available quantity this afternoon.", sentAt: "23 Oct 2026, 10:05 am" },
+    ],
+  },
+  {
+    id: "REQ-SHB-022",
+    projectId: mainProjectId,
+    packageId: "WP-L02",
+    title: "Clearance for overhead support drilling",
+    details: "The marked ceiling zone crosses a fire service route. Please confirm the approved drilling locations before supports are fixed.",
+    kind: "Clearance",
+    requestedBy: roleNames.supervisor,
+    createdAt: Date.parse("2026-10-22T03:30:00+05:30"),
+    dueDate: "2026-10-26",
+    currentOwner: roleNames.engineer,
+    currentOwnerRole: "engineer",
+    ownerSince: Date.parse("2026-10-22T03:30:00+05:30"),
+    status: "Open",
+    history: [{ owner: roleNames.engineer, role: "engineer", at: Date.parse("2026-10-22T03:30:00+05:30") }],
+    messages: [
+      { id: "RMSG-SHB-022-1", author: roleNames.supervisor, role: "supervisor", message: "I attached the ceiling photo and marked the proposed support points. Please confirm the safe locations.", sentAt: "22 Oct 2026, 9:00 am" },
+    ],
+  },
+  {
+    id: "REQ-SHB-023",
+    projectId: mainProjectId,
+    packageId: "WP-L04",
+    title: "Client approval for condensate drain route",
+    details: "The planned drain route passes through a finished service corridor. Client approval is needed for the revised route before installation.",
+    kind: "Clearance",
+    requestedBy: roleNames.supervisor,
+    createdAt: Date.parse("2026-10-20T04:30:00+05:30"),
+    dueDate: "2026-10-24",
+    currentOwner: roleNames.pm,
+    currentOwnerRole: "pm",
+    ownerSince: Date.parse("2026-10-22T06:00:00+05:30"),
+    status: "Open",
+    history: [
+      { owner: roleNames.engineer, role: "engineer", at: Date.parse("2026-10-20T04:30:00+05:30") },
+      { owner: roleNames.pm, role: "pm", at: Date.parse("2026-10-22T06:00:00+05:30") },
+    ],
+    messages: [
+      { id: "RMSG-SHB-023-1", author: roleNames.engineer, role: "engineer", message: "The revised route avoids the finished corridor. Please obtain client confirmation so we can proceed.", sentAt: "22 Oct 2026, 11:30 am" },
+    ],
+  },
+  {
+    id: "REQ-SHB-024",
+    projectId: mainProjectId,
+    packageId: "WP-L03",
+    title: "Super Admin approval for shaft access",
+    details: "The client has restricted access to the main shaft pending a safety review. The PM needs senior approval to coordinate an access window.",
+    kind: "Clearance",
+    requestedBy: roleNames.supervisor,
+    createdAt: Date.parse("2026-10-19T07:15:00+05:30"),
+    dueDate: "2026-10-23",
+    currentOwner: roleNames.superadmin,
+    currentOwnerRole: "superadmin",
+    ownerSince: Date.parse("2026-10-23T10:00:00+05:30"),
+    status: "Open",
+    history: [
+      { owner: roleNames.engineer, role: "engineer", at: Date.parse("2026-10-19T07:15:00+05:30") },
+      { owner: roleNames.pm, role: "pm", at: Date.parse("2026-10-21T09:30:00+05:30") },
+      { owner: roleNames.superadmin, role: "superadmin", at: Date.parse("2026-10-23T10:00:00+05:30") },
+    ],
+    messages: [
+      { id: "RMSG-SHB-024-1", author: roleNames.engineer, role: "engineer", message: "We cannot continue the riser work until the client confirms a supervised access time.", sentAt: "21 Oct 2026, 3:00 pm" },
+      { id: "RMSG-SHB-024-2", author: roleNames.pm, role: "pm", message: "Escalating for support with the client safety review and access coordination.", sentAt: "23 Oct 2026, 3:30 pm" },
+    ],
+  },
+  {
+    id: "REQ-CBC-014",
+    projectId: secondProjectId,
+    packageId: "WP-CBC-L02",
+    title: "Approve revised support route",
+    details: "A beam conflicts with the planned threaded rod line in the north corridor. Please confirm the revised route so the team can continue.",
+    kind: "Clearance",
+    requestedBy: roleNames.supervisor,
+    createdAt: Date.parse("2026-10-20T11:15:00+05:30"),
+    dueDate: "2026-10-22",
+    currentOwner: "Meera Thomas",
+    currentOwnerRole: "pm",
+    ownerSince: Date.parse("2026-10-22T05:00:00+05:30"),
+    status: "Open",
+    history: [
+      { owner: roleNames.engineer, role: "engineer", at: Date.parse("2026-10-20T11:15:00+05:30") },
+      { owner: "Meera Thomas", role: "pm", at: Date.parse("2026-10-22T05:00:00+05:30") },
+    ],
+    messages: [
+      { id: "RMSG-CBC-014-1", author: roleNames.engineer, role: "engineer", message: "The alternate route maintains the required ceiling clearance. I have sent the marked-up drawing to the PM for approval.", sentAt: "22 Oct 2026, 10:30 am" },
+    ],
+  },
+  {
+    id: "REQ-TCH-009",
+    projectId: thirdProjectId,
+    packageId: "WP-TCH-L04",
+    title: "Facilities clearance for drain penetration",
+    details: "The condensate drain needs a sleeve through the service wall. Hospital facilities approval is required before core drilling can begin.",
+    kind: "Clearance",
+    requestedBy: roleNames.supervisor,
+    createdAt: Date.parse("2026-10-20T05:30:00+05:30"),
+    dueDate: "2026-10-23",
+    currentOwner: roleNames.superadmin,
+    currentOwnerRole: "superadmin",
+    ownerSince: Date.parse("2026-10-23T09:00:00+05:30"),
+    status: "Open",
+    history: [
+      { owner: roleNames.engineer, role: "engineer", at: Date.parse("2026-10-20T05:30:00+05:30") },
+      { owner: roleNames.pm, role: "pm", at: Date.parse("2026-10-21T08:00:00+05:30") },
+      { owner: roleNames.superadmin, role: "superadmin", at: Date.parse("2026-10-23T09:00:00+05:30") },
+    ],
+    messages: [
+      { id: "RMSG-TCH-009-1", author: roleNames.engineer, role: "engineer", message: "The facilities team requires senior approval for the wall penetration. Photos and the marked-up drawing are attached to the site file.", sentAt: "21 Oct 2026, 1:45 pm" },
+      { id: "RMSG-TCH-009-2", author: roleNames.pm, role: "pm", message: "I have escalated this for Super Admin support. The work is on hold until the hospital signs off.", sentAt: "23 Oct 2026, 2:30 pm" },
+    ],
+  },
+];
 
 const seedMaterialRequests: MaterialRequestGroup[] = [
   { id: "MRG-SHB-BOQ-014", projectId: mainProjectId, source: "BOQ", requestedBy: roleNames.engineer, requestedDate: "2026-10-18", status: "Pending PM review", items: [
@@ -627,6 +779,15 @@ export function WorkflowApp() {
   const [additionalWorks, setAdditionalWorks] = useState<AdditionalWork[]>([]);
   const [dailyReports, setDailyReports] = useState(seedDailyReports);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [workPackageRequests, setWorkPackageRequests] = useState<WorkPackageRequest[]>(seedWorkPackageRequests);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [readEscalations, setReadEscalations] = useState<string[]>([]);
+  const [requestTitle, setRequestTitle] = useState("");
+  const [requestDetails, setRequestDetails] = useState("");
+  const [requestKind, setRequestKind] = useState<WorkPackageRequest["kind"]>("Clearance");
+  const [requestDueDate, setRequestDueDate] = useState("");
+  const [requestEngineer, setRequestEngineer] = useState(roleNames.engineer);
+  const [requestReplies, setRequestReplies] = useState<Record<string, string>>({});
   const [localPurchases, setLocalPurchases] = useState(seedLocalPurchases);
   const [orders, setOrders] = useState(seedOrders);
   const [selectedProjectId, setSelectedProjectId] = useState(mainProjectId);
@@ -735,14 +896,17 @@ export function WorkflowApp() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const personName = roleNames[role];
   const project = projects.find((item) => item.id === selectedProjectId) ?? projects[0];
+  const personName = role === "pm" ? project?.pm ?? roleNames.pm : roleNames[role];
   const projectLines = boqLines.filter((line) => line.projectId === project?.id);
   const projectPackages = packages.filter((workPackage) => workPackage.projectId === project?.id);
   const selectedPackage = projectPackages.find((workPackage) => workPackage.id === selectedPackageId);
   const selectedPackageLine = projectLines.find((line) => line.id === selectedPackage?.lineId);
   const selectedPackageReports = dailyReports.filter((report) => report.packageId === selectedPackageId).sort((a, b) => b.date.localeCompare(a.date));
   const selectedPackageMessages = messages.filter((message) => message.packageId === selectedPackageId);
+  const selectedPackageRequests = workPackageRequests.filter((request) => request.packageId === selectedPackageId);
+  const escalatedRequests = workPackageRequests.filter((request) => request.currentOwnerRole === "superadmin" && request.status === "Open");
+  const unreadEscalationCount = escalatedRequests.filter((request) => !readEscalations.includes(request.id)).length;
   const visiblePages = rolesPages[role];
   const isProjectPage = projectPages[role].includes(page);
   const currentOrders = orders.filter((order) => order.projectId === project?.id);
@@ -1327,6 +1491,80 @@ export function WorkflowApp() {
     setNotice("Clearance recorded. Set the work duration and dates in the BOQ before scheduling progress.");
   }
 
+  function createWorkPackageRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedPackage || !requestTitle.trim() || !requestDetails.trim() || !requestDueDate) {
+      setValidationError("Add a title, details, and needed-by date before sending the request.");
+      return;
+    }
+    if (requestDueDate < todayInIndiaISO()) {
+      setValidationError("Choose today or a future date for this request.");
+      return;
+    }
+    const now = Date.now();
+    setWorkPackageRequests((current) => [...current, {
+      id: `REQ-${now}`,
+      projectId: selectedPackage.projectId,
+      packageId: selectedPackage.id,
+      title: requestTitle.trim(),
+      details: requestDetails.trim(),
+      kind: requestKind,
+      requestedBy: personName,
+      createdAt: now,
+      dueDate: requestDueDate,
+      currentOwner: requestEngineer,
+      currentOwnerRole: "engineer",
+      ownerSince: now,
+      status: "Open",
+      history: [{ owner: requestEngineer, role: "engineer", at: now }],
+      messages: [],
+    }]);
+    setRequestTitle("");
+    setRequestDetails("");
+    setRequestDueDate("");
+    setNotice(`Request sent to ${requestEngineer}.`);
+  }
+
+  function transferWorkRequest(requestId: string, nextRole: "pm" | "superadmin") {
+    const request = workPackageRequests.find((item) => item.id === requestId);
+    if (!request || request.status !== "Open") return;
+    if (nextRole === "pm" && (role !== "engineer" || request.currentOwnerRole !== "engineer" || request.currentOwner !== personName)) return;
+    if (nextRole === "superadmin" && (role !== "pm" || request.currentOwnerRole !== "pm" || request.currentOwner !== personName)) return;
+    const nextOwner = nextRole === "pm" ? project?.pm ?? roleNames.pm : roleNames.superadmin;
+    const now = Date.now();
+    setWorkPackageRequests((current) => current.map((item) => item.id === requestId ? {
+      ...item,
+      currentOwner: nextOwner,
+      currentOwnerRole: nextRole,
+      ownerSince: now,
+      history: [...item.history, { owner: nextOwner, role: nextRole, at: now }],
+    } : item));
+    if (nextRole === "superadmin") {
+      setReadEscalations((current) => current.filter((id) => id !== requestId));
+      setNotice("Escalated to the Super Admin. An in-app notification is ready for them.");
+    } else {
+      setNotice(`Assigned to ${nextOwner}, the Project Manager.`);
+    }
+  }
+
+  function resolveWorkRequest(requestId: string) {
+    const request = workPackageRequests.find((item) => item.id === requestId);
+    if (!request || request.status !== "Open" || request.currentOwner !== personName || request.currentOwnerRole !== role) return;
+    setWorkPackageRequests((current) => current.map((item) => item.id === requestId ? { ...item, status: "Resolved" } : item));
+    setNotice("Request marked resolved.");
+  }
+
+  function sendWorkRequestReply(event: FormEvent<HTMLFormElement>, requestId: string) {
+    event.preventDefault();
+    const message = (requestReplies[requestId] ?? "").trim();
+    if (!message) return;
+    setWorkPackageRequests((current) => current.map((item) => item.id === requestId ? {
+      ...item,
+      messages: [...item.messages, { id: `RMSG-${Date.now()}`, author: personName, role, message, sentAt: new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(new Date()) }],
+    } : item));
+    setRequestReplies((current) => ({ ...current, [requestId]: "" }));
+  }
+
   function submitLocalPurchase(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const packageId = selectedPackageId ?? projectPackages[0]?.id;
@@ -1567,6 +1805,32 @@ export function WorkflowApp() {
           <div className="space-y-4"><Card className="border-0 shadow-sm ring-1 ring-slate-200/70"><CardHeader className="border-b border-slate-100"><CardTitle className="flex items-center gap-2 text-sm"><MessageCircle className="size-4 text-teal-700" />Work package chat</CardTitle><p className="text-[10px] text-slate-500">Questions and clearance requests stay with this package.</p></CardHeader><CardContent className="space-y-3 p-4"><form noValidate onSubmit={(event) => sendChat(event, "Message")} className="flex gap-2"><TextInput value={chatMessage} onChange={(event) => setChatMessage(event.target.value)} placeholder="Ask or reply..." className="flex-1" /><Button type="submit" size="icon-sm" aria-label="Send message"><Send className="size-3.5" /></Button></form><form noValidate onSubmit={(event) => sendChat(event, "Clearance request")} className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3"><p className="text-[10px] font-semibold text-amber-900">Request internal clearance</p><div className="flex gap-2"><TextInput value={clearanceMessage} onChange={(event) => setClearanceMessage(event.target.value)} placeholder="What approval is needed?" className="flex-1" /><Button type="submit" size="sm" variant="outline" className="border-amber-300 bg-white">Send</Button></div></form><div className="max-h-[430px] space-y-2 overflow-y-auto">{selectedPackageMessages.map((message) => <article key={message.id} className={`rounded-lg border p-3 ${message.kind === "Clearance request" ? "border-amber-200 bg-amber-50/60" : "border-slate-100 bg-slate-50"}`}><div className="flex flex-wrap items-center gap-2"><b className="text-[10px] text-slate-700">{message.author}</b><span className="text-[9px] text-slate-400">{roleLabels[message.role]}</span>{message.kind === "Clearance request" && <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold text-amber-800">Clearance {message.resolved ? "resolved" : "open"}</span>}</div><p className="mt-2 text-xs leading-relaxed text-slate-600">{message.message}</p>{message.kind === "Clearance request" && role === "engineer" && !message.resolved && <Button size="xs" variant="outline" className="mt-2" onClick={() => resolveClearance(message.id)}><Check className="size-3" />Mark resolved</Button>}</article>)}{selectedPackageMessages.length === 0 && <p className="py-4 text-center text-[10px] text-slate-400">No messages for this work package.</p>}</div></CardContent></Card>
           </div>
         </div>
+        <Card className="mb-4 border-0 shadow-sm ring-1 ring-slate-200/70">
+          <CardHeader className="border-b border-slate-100"><CardTitle className="flex items-center gap-2 text-sm"><MessageCircle className="size-4 text-teal-700" />Requests & escalation</CardTitle><p className="text-[10px] text-slate-500">Materials and clearance needs stay with this package. The current owner is responsible until they resolve or reassign the request.</p></CardHeader>
+          <CardContent className="space-y-4 p-4">
+            {role === "supervisor" && <form noValidate onSubmit={createWorkPackageRequest} className="space-y-3 rounded-xl border border-teal-100 bg-teal-50/40 p-3">
+              <p className="text-[11px] font-semibold text-slate-800">Create a request</p>
+              <div className="grid gap-3 sm:grid-cols-2"><Field label="Request type"><WorkflowSelect value={requestKind} onValueChange={(value) => setRequestKind(value as WorkPackageRequest["kind"])} className="w-full" options={(["Material", "Clearance", "Other"] as const).map((value) => ({ value, label: value }))} /></Field><Field label="Assign Engineer"><WorkflowSelect value={requestEngineer} onValueChange={setRequestEngineer} className="w-full" options={teamMembers.filter((member) => member.role === "engineer").map((member) => ({ value: member.name, label: member.name }))} /></Field></div>
+              <Field label="Request title"><TextInput value={requestTitle} onChange={(event) => setRequestTitle(event.target.value)} placeholder="e.g. Confirm ceiling access for Level 8 duct work" className="w-full" /></Field>
+              <Field label="What is needed?"><Textarea value={requestDetails} onChange={(event) => setRequestDetails(event.target.value)} rows={2} placeholder="Describe the material, approval, or clearance required..." className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-teal-700" /></Field>
+              <div className="flex flex-wrap items-end justify-between gap-3"><Field label="Needed by"><DatePicker value={requestDueDate} onValueChange={setRequestDueDate} minDate={todayISO} ariaLabel="Request needed-by date" className="w-48" /></Field><Button type="submit" className="bg-teal-800 text-white hover:bg-teal-700"><Send className="size-3.5" />Send to Engineer</Button></div>
+            </form>}
+            {selectedPackageRequests.map((request) => {
+              const overdueDays = request.status === "Open" && todayISO && request.dueDate < todayISO ? Math.floor((Date.parse(`${todayISO}T12:00:00`) - Date.parse(`${request.dueDate}T12:00:00`)) / 86_400_000) : 0;
+              const ownerDays = Math.floor((Date.now() - request.ownerSince) / 86_400_000);
+              const isCurrentOwner = request.currentOwner === personName && request.currentOwnerRole === role;
+              return <article key={request.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-semibold text-slate-600">{request.kind}</span><Status value={request.status} /><span className="text-[9px] text-slate-400">{request.id}</span></div><h3 className="mt-2 text-xs font-semibold text-slate-800">{request.title}</h3><p className="mt-1 text-xs leading-relaxed text-slate-600">{request.details}</p></div><div className="min-w-40 rounded-lg bg-slate-50 px-3 py-2"><p className="text-[9px] text-slate-400">Needed by</p><p className="mt-1 text-[11px] font-semibold text-slate-700">{formatDate(request.dueDate)}</p></div></div>
+                <div className={`mt-3 rounded-lg px-3 py-2 text-[10px] ${overdueDays ? "bg-rose-50 text-rose-800" : "bg-slate-50 text-slate-600"}`}><b>Current owner:</b> {request.currentOwner} · {roleLabels[request.currentOwnerRole]}{request.status === "Open" && <> · responsible for {ownerDays} day{ownerDays === 1 ? "" : "s"}{overdueDays > 0 ? ` · ${overdueDays} day${overdueDays === 1 ? "" : "s"} overdue` : ""}</>}</div>
+                {request.history.length > 1 && <p className="mt-2 text-[9px] text-slate-400">Assignment history: {request.history.map((entry) => `${entry.owner} (${roleLabels[entry.role]})`).join(" → ")}</p>}
+                <div className="mt-3 space-y-2">{request.messages.map((message) => <div key={message.id} className="rounded-lg bg-slate-50 p-2"><p className="text-[9px] font-semibold text-slate-700">{message.author} · {roleLabels[message.role]} <span className="font-normal text-slate-400">· {message.sentAt}</span></p><p className="mt-1 whitespace-pre-wrap text-[10px] text-slate-600">{message.message}</p></div>)}</div>
+                {request.status === "Open" && <form onSubmit={(event) => sendWorkRequestReply(event, request.id)} className="mt-3 flex gap-2"><TextInput value={requestReplies[request.id] ?? ""} onChange={(event) => setRequestReplies((current) => ({ ...current, [request.id]: event.target.value }))} placeholder="Chat about this request..." className="flex-1" /><Button type="submit" size="sm" variant="outline" aria-label="Send request message"><Send className="size-3.5" /></Button></form>}
+                {request.status === "Open" && isCurrentOwner && <div className="mt-3 flex flex-wrap gap-2">{request.currentOwnerRole === "engineer" && <><Button size="sm" onClick={() => resolveWorkRequest(request.id)} className="bg-teal-800 text-white hover:bg-teal-700"><Check className="size-3.5" />Resolve request</Button><Button size="sm" variant="outline" onClick={() => transferWorkRequest(request.id, "pm")}>Assign to Project Manager<ArrowRight className="size-3.5" /></Button></>}{request.currentOwnerRole === "pm" && <><Button size="sm" onClick={() => resolveWorkRequest(request.id)} className="bg-teal-800 text-white hover:bg-teal-700"><Check className="size-3.5" />Resolve request</Button><Button size="sm" variant="outline" onClick={() => transferWorkRequest(request.id, "superadmin")}>Escalate to Super Admin<ArrowRight className="size-3.5" /></Button></>}{request.currentOwnerRole === "superadmin" && <Button size="sm" onClick={() => resolveWorkRequest(request.id)} className="bg-teal-800 text-white hover:bg-teal-700"><Check className="size-3.5" />Resolve request</Button>}</div>}
+              </article>;
+            })}
+            {selectedPackageRequests.length === 0 && role !== "supervisor" && <Empty title="No package requests" detail="Requests raised by the Supervisor will appear here with their owner, due date, chat, and escalation history." />}
+          </CardContent>
+        </Card>
       </>;
     }
 
@@ -1855,7 +2119,7 @@ export function WorkflowApp() {
     <div className="mx-auto flex min-h-screen max-w-[1600px]">
       <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 self-start flex-col overflow-y-auto border-r border-slate-200 bg-white xl:flex"><div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-slate-100 px-4"><span className="grid size-9 place-items-center rounded-xl bg-teal-800 text-white"><Wrench className="size-[18px]" /></span><span><b className="block text-[17px] tracking-tight">estatio<span className="text-teal-700">.</span></b><small className="text-[9px] font-semibold uppercase tracking-[0.15em] text-slate-400">MEP operations</small></span></div><div className="px-4 pt-5"><p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400">Workspace</p><nav className="space-y-1">{visiblePages.map((item) => <button key={item} onClick={() => navigate(item)} className={`flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-xs font-semibold transition ${page === item ? "bg-teal-50 text-teal-900" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}><NavIcon page={item} />{pageLabels[item]}{item === "engineer-review" && openUpdateCount + openBillCount > 0 && <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">{openUpdateCount + openBillCount}</span>}{item === "purchase-approval" && openOrderCount > 0 && <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">{openOrderCount}</span>}</button>)}</nav></div><div className="mt-auto p-4"><div className="rounded-xl border border-teal-100 bg-teal-50/60 p-3"><p className="flex items-center gap-2 text-[10px] font-bold text-teal-900"><ShieldCheck className="size-3.5" />Prototype workspace</p><p className="mt-1 text-[10px] leading-relaxed text-slate-500">Demo actions stay in local page state. No production data is connected.</p></div></div></aside>
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex min-h-[68px] flex-wrap items-center gap-3 border-b border-slate-200/80 bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 xl:px-8"><div className="flex items-center gap-2 xl:hidden"><span className="grid size-8 place-items-center rounded-lg bg-teal-800 text-white"><Wrench className="size-4" /></span><b className="text-sm">estatio<span className="text-teal-700">.</span></b></div><div className="hidden max-w-[55%] truncate text-[11px] text-slate-400 xl:block">Workspace <span className="mx-2">/</span>{isProjectPage && <><span>{project?.name}</span><span className="mx-2">/</span></>}<b className="text-slate-700">{pageLabels[page]}</b></div><div className="ml-auto flex items-center gap-2"><button className="relative grid size-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-50" aria-label="Notifications"><Bell className="size-4" />{(openUpdateCount + openBillCount + openOrderCount) > 0 && <span className="absolute right-1 top-1 size-2 rounded-full bg-amber-500" />}</button><WorkflowSelect ariaLabel="Switch role" value={role} onValueChange={(value) => changeRole(value as Role)} className="w-36 text-[11px] font-semibold" options={[{ value: "superadmin", label: "Super Admin" }, { value: "pm", label: "Project Manager" }, { value: "engineer", label: "Engineer" }, { value: "supervisor", label: "Supervisor" }, { value: "purchase", label: "Purchase Team" }]} /><div className="hidden items-center gap-2 sm:flex"><Avatar className="size-7"><AvatarFallback className="bg-teal-100 text-[9px] font-bold text-teal-800">{personName.split(" ").map((part) => part[0]).join("")}</AvatarFallback></Avatar><span className="max-w-32 truncate text-[10px] font-semibold text-slate-700">{personName}</span></div></div></header>
+        <header className="sticky top-0 z-30 flex min-h-[68px] flex-wrap items-center gap-3 border-b border-slate-200/80 bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 xl:px-8"><div className="flex items-center gap-2 xl:hidden"><span className="grid size-8 place-items-center rounded-lg bg-teal-800 text-white"><Wrench className="size-4" /></span><b className="text-sm">estatio<span className="text-teal-700">.</span></b></div><div className="hidden max-w-[55%] truncate text-[11px] text-slate-400 xl:block">Workspace <span className="mx-2">/</span>{isProjectPage && <><span>{project?.name}</span><span className="mx-2">/</span></>}<b className="text-slate-700">{pageLabels[page]}</b></div><div className="relative ml-auto flex items-center gap-2"><button onClick={() => setNotificationsOpen((open) => !open)} aria-expanded={notificationsOpen} className="relative grid size-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-50" aria-label="Notifications"><Bell className="size-4" />{(role === "superadmin" ? unreadEscalationCount : openUpdateCount + openBillCount + openOrderCount) > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[8px] font-bold text-white">{role === "superadmin" ? unreadEscalationCount : openUpdateCount + openBillCount + openOrderCount}</span>}</button>{notificationsOpen && <div className="absolute right-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3 shadow-xl"><div className="mb-2 flex items-center justify-between"><p className="text-xs font-semibold text-slate-800">Notifications</p><button onClick={() => setNotificationsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-700">Close</button></div>{role === "superadmin" ? escalatedRequests.map((request) => <button key={request.id} onClick={() => { setReadEscalations((current) => current.includes(request.id) ? current : [...current, request.id]); setSelectedProjectId(request.projectId); setSelectedPackageId(request.packageId); setPage("work"); setNotificationsOpen(false); }} className="mb-2 w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-left hover:bg-amber-100"><span className="block text-[10px] font-semibold text-amber-900">Escalated work package request</span><span className="mt-1 block text-[10px] text-slate-700">{request.title}</span><span className="mt-1 block text-[9px] text-slate-500">{request.projectId} · {request.currentOwner} · needed by {formatDate(request.dueDate)}</span></button>) : <p className="py-3 text-[10px] leading-relaxed text-slate-500">Escalation notifications appear here for the Super Admin. Pending reviews: {openUpdateCount + openBillCount + openOrderCount}.</p>}{role === "superadmin" && escalatedRequests.length === 0 && <p className="py-3 text-center text-[10px] text-slate-500">No escalated requests right now.</p>}</div>}<WorkflowSelect ariaLabel="Switch role" value={role} onValueChange={(value) => changeRole(value as Role)} className="w-36 text-[11px] font-semibold" options={[{ value: "superadmin", label: "Super Admin" }, { value: "pm", label: "Project Manager" }, { value: "engineer", label: "Engineer" }, { value: "supervisor", label: "Supervisor" }, { value: "purchase", label: "Purchase Team" }]} /><div className="hidden items-center gap-2 sm:flex"><Avatar className="size-7"><AvatarFallback className="bg-teal-100 text-[9px] font-bold text-teal-800">{personName.split(" ").map((part) => part[0]).join("")}</AvatarFallback></Avatar><span className="max-w-32 truncate text-[10px] font-semibold text-slate-700">{personName}</span></div></div></header>
         <div className="sticky top-[68px] z-20 flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2 xl:hidden">{visiblePages.map((item) => <button key={item} onClick={() => navigate(item)} className={`shrink-0 rounded-md px-2.5 py-1.5 text-[10px] font-semibold ${page === item ? "bg-teal-50 text-teal-900" : "text-slate-500"}`}>{pageLabels[item]}</button>)}</div>
         <div className="mx-auto max-w-[1450px] px-4 py-5 sm:px-6 sm:py-7 xl:px-8">
       <div className="mb-5"><p className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400"><CalendarDays className="size-3" />{todayLabel} <span>· Kerala, India</span></p></div>
