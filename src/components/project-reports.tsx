@@ -6,6 +6,7 @@ import { Activity, BadgeCheck, Building2, Check, ClipboardList, FileDown, FileTe
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
+import * as XLSX from "xlsx";
 
 type ReportSection = "summary" | "progress" | "schedule" | "boq" | "materials" | "updates" | "additionalWorks" | "financials";
 type ProjectReportProject = {
@@ -116,10 +117,30 @@ export function ProjectReports({ project, preparedBy, today, boqLines, materialR
     if (value === "client") setSelected((current) => current.filter((id) => reportSections.find((section) => section.id === id)?.clientSafe));
   }
 
+  function downloadExcel() {
+    const workbook = XLSX.utils.book_new();
+    const addSheet = (name: string, rows: (string | number)[][]) => {
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), name);
+    };
+
+    for (const section of sections) {
+      if (section.id === "summary") addSheet("Project details", [["Field", "Value"], ["Project", project.name], ["Customer", project.client], ["Customer contact", project.contactName], ["Email", project.email], ["Phone", project.phone], ["Project Manager", project.pm], ["Project status", project.handoverStatus], ["BOQ status", project.boqStatus], ["Report period", `${formatDate(fromDate)} — ${formatDate(toDate)}`], ["Prepared by", preparedBy], ["Generated", formatDate(today)]]);
+      if (section.id === "progress") addSheet("Progress", [["Metric", "Value"], ["Measured progress", `${progress}%`], ["Planned progress", `${planned}%`], ["Low Side work lines complete", `${completedLines} / ${lowSide.length}`]]);
+      if (section.id === "schedule") addSheet("Schedule", [["Work item", "Section", "Quantity", "Unit", "Start date", "End date", "Status"], ...lowSide.map((line) => [line.item, line.section, line.quantity, line.unit, line.startDate, line.endDate, line.status])]);
+      if (section.id === "boq") addSheet("BOQ", [["Work item", "Section", "Quantity", "Unit", "Unit cost", "Estimate", "Status"], ...boqLines.filter((line) => line.section !== "Finalization & Handover").map((line) => [line.item, line.section, line.quantity, line.unit, line.unitCost, line.workEstimate, line.status])]);
+      if (section.id === "materials") addSheet("Materials", [["Request", "Source", "Material", "Quantity", "Approved quantity", "Unit", "Needed date", "Status"], ...requestedMaterials.map((item) => [item.group, item.source, item.material, item.quantity, audience === "internal" ? item.approvedQuantity ?? "" : "", item.unit, item.wantedDate, audience === "client" && item.status !== "Received" ? "In procurement" : item.status])]);
+      if (section.id === "updates") addSheet("Site updates", [["Date", "Progress note", "Quantity", "Status"], ...selectedDates.daily.map((report) => [report.date, report.progress, report.quantity, audience === "client" && report.status !== "Verified" ? "Under review" : report.status])]);
+      if (section.id === "additionalWorks") addSheet("Additional works", [["Title", "Supervisor", "Quantity", "Unit", "Start date", "End date", "Status", "Description"], ...selectedWorks.map((work) => [work.title, work.supervisor, work.quantity, work.unit, work.startDate, work.endDate, work.status, work.description])]);
+      if (section.id === "financials" && audience === "internal") addSheet("Financial summary", [["Metric", "Amount (INR)"], ["Budget", project.budget], ["BOQ estimate", finance.estimate], ["Approved spend", finance.approved], ["Pending bills", finance.pending]]);
+    }
+
+    XLSX.writeFile(workbook, `estatio-${project.id}-report.xlsx`);
+  }
+
   return <div className="space-y-4">
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-teal-800">Project reporting</p><h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Build a project report</h2><p className="mt-1 text-xs text-slate-500">Choose the audience and sections. The preview updates as you make changes.</p></div>
-      <Button type="button" onClick={() => window.print()} disabled={!validRange || sections.length === 0} className="bg-teal-800 text-white hover:bg-teal-700"><FileDown className="size-4" />Download PDF</Button>
+      <div className="flex gap-2"><Button type="button" onClick={() => window.print()} disabled={!validRange || sections.length === 0} variant="outline"><FileDown className="size-4" />Download PDF</Button><Button type="button" onClick={downloadExcel} disabled={!validRange || sections.length === 0} className="bg-teal-800 text-white hover:bg-teal-700"><FileDown className="size-4" />Download Excel</Button></div>
     </div>
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(310px,0.78fr)_minmax(500px,1.22fr)]">
       <div className="space-y-4">

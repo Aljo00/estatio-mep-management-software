@@ -71,7 +71,7 @@ import {
 import { ProjectReports } from "@/components/project-reports";
 
 type Role = "superadmin" | "pm" | "engineer" | "supervisor" | "purchase";
-type Page = "overview" | "projects" | "people" | "boq" | "work" | "additional-materials" | "additional-works" | "procurement" | "engineer-review" | "purchase-approval" | "local-purchases" | "costs" | "project-costs" | "handover" | "reports";
+type Page = "overview" | "projects" | "people" | "project-overview" | "boq" | "work" | "additional-materials" | "additional-works" | "procurement" | "engineer-review" | "purchase-approval" | "local-purchases" | "costs" | "project-costs" | "handover" | "reports";
 type BoqSection = "High Side" | "Low Side" | "Finalization & Handover";
 type BoqLine = {
   id: string;
@@ -212,6 +212,7 @@ const roleNames: Record<Role, string> = {
 const pageLabels: Record<Page, string> = {
   overview: "Overview",
   projects: "Projects",
+  "project-overview": "Project overview",
   boq: "BOQ workspace",
   work: "Work packages",
   "additional-materials": "Materials",
@@ -493,8 +494,8 @@ const rolesPages: Record<Role, Page[]> = {
 };
 
 const projectPages: Record<Role, Page[]> = {
-  superadmin: ["boq", "work", "additional-materials", "additional-works", "project-costs", "handover", "reports"],
-  pm: ["boq", "work", "additional-materials", "additional-works", "project-costs", "handover"],
+  superadmin: ["project-overview", "boq", "work", "additional-materials", "additional-works", "project-costs", "handover", "reports"],
+  pm: ["project-overview", "boq", "work", "additional-materials", "additional-works", "project-costs", "handover"],
   engineer: ["boq", "work", "additional-materials", "additional-works", "engineer-review", "local-purchases", "project-costs", "handover"],
   supervisor: ["work", "additional-works", "local-purchases"],
   purchase: ["additional-materials"],
@@ -1491,12 +1492,12 @@ export function WorkflowApp() {
         ? ["Work activity", "Duration", "Start", "End", "Status", "Work estimate (₹)", ""]
         : ["Finalization item", "Duration", "Start", "End", "Status", ""];
     return <>
-      <SectionTitle eyebrow={role === "superadmin" ? "Super Admin access · Engineer + PM prepared" : "Engineer + Project Manager"} title="BOQ workspace" description="Prepare and review the BOQ in a spreadsheet-style grid. High Side covers materials; Low Side covers scheduled work; the last section tracks closeout." action={<div className="flex items-center gap-2"><Status value={project?.boqStatus ?? "Draft"} />{role === "engineer" && project?.boqStatus === "Draft" && <Button onClick={submitBoq} className="bg-teal-800 text-white hover:bg-teal-700"><Send className="size-3.5" />Submit to PM</Button>}{role === "pm" && project?.boqStatus === "Pending PM approval" && <Button onClick={approveBoq} className="bg-teal-800 text-white hover:bg-teal-700"><Check className="size-3.5" />Approve BOQ</Button>}</div>} />
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3"><div><p className="text-sm font-semibold text-slate-800">{project?.name}</p><p className="mt-1 text-[10px] text-slate-500">Prepared by Engineer {roleNames.engineer} and PM {project?.pm}</p></div><div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">{(["High Side", "Low Side", "Finalization & Handover"] as BoqSection[]).map((section) => <button key={section} onClick={() => setSelectedBoqSection(section)} className={`rounded-md px-3 py-2 text-[10px] font-semibold ${selectedBoqSection === section ? "bg-white text-teal-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{section}</button>)}</div></div>
+      <SectionTitle eyebrow={role === "superadmin" ? "Super Admin access · Engineer + PM prepared" : "Engineer + Project Manager"} title="BOQ workspace" description="Prepare and review purchase items, work schedules, and project closeout in one workspace." action={<div className="flex items-center gap-2"><Status value={project?.boqStatus ?? "Draft"} />{role === "engineer" && project?.boqStatus === "Draft" && <Button onClick={submitBoq} className="bg-teal-800 text-white hover:bg-teal-700"><Send className="size-3.5" />Submit to PM</Button>}{role === "pm" && project?.boqStatus === "Pending PM approval" && <Button onClick={approveBoq} className="bg-teal-800 text-white hover:bg-teal-700"><Check className="size-3.5" />Approve BOQ</Button>}</div>} />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3"><div><p className="text-sm font-semibold text-slate-800">{project?.name}</p><p className="mt-1 text-[10px] text-slate-500">Prepared by Engineer {roleNames.engineer} and PM {project?.pm}</p></div><div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">{(["High Side", "Low Side", "Finalization & Handover"] as BoqSection[]).map((section) => { const label = section === "High Side" ? "Purchase" : section === "Low Side" ? "Work Schedule" : section; return <button key={section} onClick={() => setSelectedBoqSection(section)} className={`rounded-md px-3 py-2 text-[10px] font-semibold ${selectedBoqSection === section ? "bg-white text-teal-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{label}</button>; })}</div></div>
       <Card className="border-0 shadow-sm ring-1 ring-slate-200/70">
         <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100">
           <div>
-            <CardTitle className="text-sm">{selectedBoqSection}</CardTitle>
+            <CardTitle className="text-sm">{selectedBoqSection === "High Side" ? "Purchase" : selectedBoqSection === "Low Side" ? "Work Schedule" : selectedBoqSection}</CardTitle>
             <p className="mt-1 text-[10px] text-slate-500">
               {selectedBoqSection === "High Side" ? "BOQ material baseline and estimates. Request quantities and track purchasing from the Materials tab." : selectedBoqSection === "Low Side" ? "Status starts automatically on the planned start date; an Engineer can complete work after verifying a daily update. Clearance remains manual." : "Testing, documentation, snag closure, and client handover"}
             </p>
@@ -1743,6 +1744,28 @@ export function WorkflowApp() {
     </>;
   };
 
+  const renderProjectOverview = () => {
+    if (!project) return null;
+    const linesById = new Map(projectLines.map((line) => [line.id, line]));
+    const projectPackages = packages.filter((item) => item.projectId === project.id).map((item) => ({
+      ...item,
+      line: linesById.get(item.lineId),
+      latest: dailyReports.filter((report) => report.packageId === item.id).sort((a, b) => b.date.localeCompare(a.date))[0],
+    }));
+    const inProgress = projectPackages.filter(({ line }) => line && lowSideStatus(line) === "In progress");
+    return <>
+      {project.isDemo && <div className="mb-4 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs text-sky-900">Illustrative demo project data.</div>}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric label="Client" value={project.client} detail={project.contactName || "Contact not provided"} icon={<Building2 className="size-4" />} />
+        <Metric label="Overall progress" value={`${project.progress ?? 0}%`} detail={`Planned ${project.plannedProgress ?? 0}%`} icon={<Activity className="size-4" />} />
+        <Metric label="Work packages in progress" value={String(inProgress.length)} detail={`${projectPackages.length} assigned packages`} icon={<PackageCheck className="size-4" />} />
+        <Metric label="Target completion" value={project.dueDate ? formatDate(project.dueDate) : "Not set"} detail={`Budget ${money(project.budget)}`} icon={<CalendarDays className="size-4" />} />
+      </div>
+      <Card className="mt-4 border-0 shadow-sm ring-1 ring-slate-200/70"><CardHeader className="border-b border-slate-100"><CardTitle className="text-sm">Project details</CardTitle></CardHeader><CardContent className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">{[["Project Manager", project.pm], ["Client email", project.email || "Not provided"], ["Client phone", project.phone || "Not provided"], ["BOQ status", project.boqStatus], ["Handover status", project.handoverStatus], ["Project ID", project.id]].map(([label, value]) => <div key={label}><p className="text-[10px] text-slate-500">{label}</p><p className="mt-1 text-xs font-semibold text-slate-800">{value}</p></div>)}</CardContent></Card>
+      <Card className="mt-4 border-0 shadow-sm ring-1 ring-slate-200/70"><CardHeader className="border-b border-slate-100"><CardTitle className="text-sm">Active work packages</CardTitle><p className="text-[10px] text-slate-500">Latest submitted progress is shown for each in-progress package.</p></CardHeader><CardContent className="divide-y divide-slate-100 p-0">{inProgress.map(({ id, line, supervisor, latest }) => <div key={id} className="grid gap-2 p-4 sm:grid-cols-[1fr_auto] sm:items-center"><div><p className="text-xs font-semibold text-slate-800">{line?.item ?? "Work package"}</p><p className="mt-1 text-[10px] text-slate-500">{id} · Supervisor {supervisor || "Not assigned"}</p></div><div className="sm:text-right"><p className="text-[10px] font-medium text-slate-700">{latest ? `${formatDate(latest.date)} · ${latest.quantity || "Progress update"}` : "No progress update submitted yet"}</p>{latest && <p className="mt-1 max-w-2xl text-[10px] text-slate-500 sm:ml-auto">{latest.progress}</p>}</div></div>)}{inProgress.length === 0 && <p className="p-5 text-center text-xs text-slate-500">No work packages are currently in progress.</p>}</CardContent></Card>
+    </>;
+  };
+
   const renderProjectCosts = () => {
     if (!project) return null;
     const finance = getProjectCostData(project);
@@ -1807,6 +1830,7 @@ export function WorkflowApp() {
   );
 
   const content: Partial<Record<Page, ReactNode>> = {
+    "project-overview": renderProjectOverview(),
     overview: renderOverview(),
     projects: renderProjects(),
     people: renderPeople(),
